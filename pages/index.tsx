@@ -377,7 +377,7 @@ export default function Home() {
                     </NumberInput>
 
                     <FormHelperText>
-                      By default the priority is 1.
+                      By default the priority is 1. 10 is max priority.
                     </FormHelperText>
                   </FormControl>
 
