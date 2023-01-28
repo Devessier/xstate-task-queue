@@ -1,7 +1,42 @@
-import { Heading, Box, Container, Text, Code, VStack } from "@chakra-ui/react";
+import {
+  Heading,
+  Box,
+  Container,
+  Text,
+  Code,
+  VStack,
+  SimpleGrid,
+  Badge,
+  HStack,
+  ThemeTypings,
+  FormControl,
+  FormLabel,
+  FormHelperText,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Flex,
+  Button,
+  Spacer,
+} from "@chakra-ui/react";
 import Head from "next/head";
 
+type TaskStatus = "waiting for processing" | "processing" | "done" | "errored";
+
 export default function Home() {
+  const tasks: {
+    id: number;
+    status: TaskStatus;
+    priority: number;
+  }[] = [
+    { id: 1, status: "waiting for processing", priority: 1 },
+    { id: 2, status: "processing", priority: 5 },
+    { id: 3, status: "done", priority: 6 },
+    { id: 3, status: "errored", priority: 10 },
+  ];
+
   return (
     <>
       <Head>
@@ -13,13 +48,100 @@ export default function Home() {
       <main>
         <Box py="10">
           <Container maxW="3xl">
-              <Heading>Task scheduler with XState</Heading>
+            <Heading as="h1">Task scheduler with XState</Heading>
 
-              <Box borderWidth={1} p="4" mt="4">
+            <Box borderWidth={1} p="4" mt="4">
+              <Box>
                 <Text>
                   Current state of the scheduler: <Code>idle</Code>
                 </Text>
+
+                <Text mt="6">Tasks:</Text>
+
+                <VStack mt="2" spacing="2" alignItems="stretch">
+                  {tasks.map(({ id, status, priority }) => {
+                    const badgeColors: Record<
+                      TaskStatus,
+                      ThemeTypings["colorSchemes"]
+                    > = {
+                      "waiting for processing": "gray",
+                      processing: "orange",
+                      done: "green",
+                      errored: "red",
+                    };
+
+                    return (
+                      <HStack
+                        key={id}
+                        spacing="2"
+                        borderWidth={1}
+                        borderRadius="sm"
+                        p="2"
+                      >
+                        <Text fontWeight="bold">#{id}</Text>
+
+                        <Badge colorScheme={badgeColors[status]}>
+                          {status}
+                        </Badge>
+
+                        <Spacer />
+
+                        <FormControl w="auto">
+                          <HStack spacing="4">
+                            <FormLabel m={0}>Priority</FormLabel>
+
+                            <NumberInput
+                              size="sm"
+                              maxW={16}
+                              value={priority}
+                              min={1}
+                              max={10}
+                            >
+                              <NumberInputField />
+                              <NumberInputStepper>
+                                <NumberIncrementStepper />
+                                <NumberDecrementStepper />
+                              </NumberInputStepper>
+                            </NumberInput>
+                          </HStack>
+                        </FormControl>
+                      </HStack>
+                    );
+                  })}
+                </VStack>
               </Box>
+
+              <Box mt="10">
+                <form>
+                  <Heading size="md">Add a task</Heading>
+
+                  <FormControl mt="4">
+                    <FormLabel>Priority</FormLabel>
+
+                    <NumberInput
+                      name="priority"
+                      defaultValue={1}
+                      min={1}
+                      max={10}
+                    >
+                      <NumberInputField />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+
+                    <FormHelperText>
+                      By default the priority is 1.
+                    </FormHelperText>
+                  </FormControl>
+
+                  <Flex justifyContent="end">
+                    <Button type="submit">Submit</Button>
+                  </Flex>
+                </form>
+              </Box>
+            </Box>
           </Container>
         </Box>
       </main>
