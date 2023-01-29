@@ -19,12 +19,15 @@ import {
   Flex,
   Button,
   Spacer,
+  RadioGroup,
+  Radio,
 } from "@chakra-ui/react";
 import { useMachine } from "@xstate/react";
 import Head from "next/head";
 import { assign, createMachine } from "xstate";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
+import { taskMachine } from "~/machines/task";
 
 function waitForTimeout() {
   const minTimeout = 3_000;
@@ -36,11 +39,24 @@ function waitForTimeout() {
 
 type TaskStatus = "waiting for processing" | "processing" | "done" | "errored";
 
+const TaskType = z.enum(["Promise", "Machine"]);
+type TaskType = z.infer<typeof TaskType>;
+
 interface Task {
   id: number;
   status: TaskStatus;
   priority: number;
   timestamp: number;
+  taskType: TaskType;
+}
+
+async function taskAsPromise() {
+  await waitForTimeout();
+
+  const shouldThrow = Math.random() < 0.5;
+  if (shouldThrow) {
+    throw new Error("Processing failed");
+  }
 }
 
 const taskSchedulerMachine =
@@ -69,6 +85,7 @@ const taskSchedulerMachine =
           | {
               type: "Add task to queue";
               priority: number;
+              taskType: TaskType;
             }
           | {
               type: "Update task's priority";
@@ -125,13 +142,15 @@ const taskSchedulerMachine =
           internal: true,
         },
       },
+
       predictableActionArguments: true,
+
       preserveActionOrder: true,
     },
     {
       actions: {
         "Push task to queue": assign(
-          ({ index, queue, tasks }, { priority }) => {
+          ({ index, queue, tasks }, { priority, taskType }) => {
             const nextIndex = index + 1;
 
             return {
@@ -144,6 +163,7 @@ const taskSchedulerMachine =
                   priority,
                   status: "waiting for processing" as const,
                   timestamp: Number(new Date()),
+                  taskType,
                 },
               },
             };
@@ -233,13 +253,18 @@ const taskSchedulerMachine =
         }),
       },
       services: {
-        "Process task": async () => {
-          await waitForTimeout();
-
-          const shouldThrow = Math.random() < 0.2;
-          if (shouldThrow) {
-            throw new Error("Processing failed");
+        "Process task": ({ tasks, currentTaskId }) => {
+          if (currentTaskId === undefined) {
+            throw new Error("currentTaskId must be defined");
           }
+
+          const { taskType } = tasks[currentTaskId];
+
+          if (taskType === "Promise") {
+            return taskAsPromise();
+          }
+
+          return taskMachine;
         },
       },
       guards: {
@@ -251,6 +276,7 @@ const taskSchedulerMachine =
 
 const addTaskSchema = zfd.formData({
   priority: zfd.numeric(z.number().int().min(1).max(10)),
+  "task-type": zfd.text(TaskType),
 });
 
 export default function Home() {
@@ -283,7 +309,7 @@ export default function Home() {
                   {tasks.length === 0 ? (
                     <Text>No task in queue. Add a task below.</Text>
                   ) : (
-                    tasks.map(({ id, status, priority }) => {
+                    tasks.map(({ id, status, priority, taskType }) => {
                       const badgeColors: Record<
                         TaskStatus,
                         ThemeTypings["colorSchemes"]
@@ -306,6 +332,14 @@ export default function Home() {
 
                           <Badge colorScheme={badgeColors[status]}>
                             {status}
+                          </Badge>
+
+                          <Badge
+                            colorScheme={
+                              taskType === "Promise" ? "blue" : "teal"
+                            }
+                          >
+                            {taskType}
                           </Badge>
 
                           <Spacer />
@@ -348,42 +382,62 @@ export default function Home() {
                   onSubmit={(event) => {
                     event.preventDefault();
 
-                    const { priority } = addTaskSchema.parse(
-                      new FormData(event.target as HTMLFormElement)
-                    );
+                    const { priority, "task-type": taskType } =
+                      addTaskSchema.parse(
+                        new FormData(event.target as HTMLFormElement)
+                      );
 
                     send({
                       type: "Add task to queue",
                       priority,
+                      taskType,
                     });
                   }}
                 >
-                  <Heading size="md">Add a task</Heading>
+                  <VStack spacing="4" alignItems="stretch">
+                    <Heading size="md">Add a task</Heading>
 
-                  <FormControl mt="4">
-                    <FormLabel>Priority</FormLabel>
+                    <FormControl>
+                      <FormLabel>Priority</FormLabel>
 
-                    <NumberInput
-                      name="priority"
-                      defaultValue={1}
-                      min={1}
-                      max={10}
-                    >
-                      <NumberInputField />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
-                    </NumberInput>
+                      <NumberInput
+                        name="priority"
+                        defaultValue={1}
+                        min={1}
+                        max={10}
+                      >
+                        <NumberInputField />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
 
-                    <FormHelperText>
-                      By default the priority is 1. 10 is max priority.
-                    </FormHelperText>
-                  </FormControl>
+                      <FormHelperText>
+                        By default the priority is 1. 10 is max priority.
+                      </FormHelperText>
+                    </FormControl>
 
-                  <Flex justifyContent="end">
-                    <Button type="submit">Submit</Button>
-                  </Flex>
+                    <FormControl as="fieldset">
+                      <FormLabel as="legend">
+                        Type of the task to launch
+                      </FormLabel>
+
+                      <RadioGroup name="task-type" defaultValue="Promise">
+                        <HStack spacing="24px">
+                          {TaskType.options.map((type) => (
+                            <Radio key={type} value={type}>
+                              {type}
+                            </Radio>
+                          ))}
+                        </HStack>
+                      </RadioGroup>
+                    </FormControl>
+
+                    <Flex justifyContent="end">
+                      <Button type="submit">Submit</Button>
+                    </Flex>
+                  </VStack>
                 </form>
               </Box>
             </Box>
