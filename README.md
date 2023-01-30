@@ -1,38 +1,37 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Task Queue with XState
 
-## Getting Started
+A task queue is a data structure containing a list of tasks to execute.
 
-First, run the development server:
+Tasks are sent to the task queue, and they are executed based on rules defined by the system. In this implementation tasks will be processed one by one, and are ordered by their *priority* and by the time they have been pending in the queue.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+![Demonstration of the task queue](demo.gif)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[Open online demo →](https://xstate-task-queue.netlify.app)
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Features
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- Tasks can be added at anytime, and when a task finishes, the next one starts to be executed.
+- Tasks are associated with a priority, that can be updated until they are started, and that will instantly modify the order of execution of the queue.
+- Two types of tasks can be executed, to show that XState suits for simple cases (a simple promise) as well as for complex cases (a state machine with several steps).
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+## How does it work?
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+![Screenshot of task queue machine](machine.png)
 
-## Learn More
+[Open task queue machine →](./machines/taskQueue.ts)
 
-To learn more about Next.js, take a look at the following resources:
+At first, the state machine is in `Idle` state and waits for a task to process.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+When a task is added through `Add task to queue` event, a new task is pushed to the queue, and the queue is reordered.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+If a task is made available while being in `Idle` state, an eventless transition is taken, that makes a transition to `Processing` state.
 
-## Deploy on Vercel
+In `Processing` state, the task is executed and is marked as being executed in the context. That way, we know the state of execution of tasks.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If the execution succeeded, we mark the task as done, and go back to `Idle` state.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+If the execution failed, we mark the task as failed, and go back to `Idle` state too.
+
+When going back to `Idle` state, we transition immediately to `Processing` state if another task can be executed.
+
+The priority of tasks can be updated at anytime, provided that they are still in the queue, and are not currently processed, nor have already been executed. This will cause the queue to be reordered.
