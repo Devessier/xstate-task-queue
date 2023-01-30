@@ -36,7 +36,7 @@ When going back to `Idle` state, we transition immediately to `Processing` state
 
 The priority of tasks can be updated at anytime, provided that they are still in the queue, and are not currently processed, nor have already been executed. This will cause the queue to be reordered.
 
-Please not how is implemented `Process task` service:
+Please not how is implemented [`Process task`](https://github.com/Devessier/xstate-task-queue/blob/6c7ca3bd78485ff808c17bebf4f9ac1cdd2995b4/machines/taskQueue.ts#L224-L236) service:
 
 ```ts
 services: {
