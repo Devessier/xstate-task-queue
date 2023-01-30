@@ -26,7 +26,7 @@ import { useMachine } from "@xstate/react";
 import Head from "next/head";
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import { taskSchedulerMachine } from "~/machines/taskScheduler";
+import { taskQueueMachine } from "~/machines/taskQueue";
 import { TaskStatus, TaskType } from "~/types";
 
 const addTaskSchema = zfd.formData({
@@ -35,7 +35,7 @@ const addTaskSchema = zfd.formData({
 });
 
 export default function Home() {
-  const [state, send] = useMachine(taskSchedulerMachine);
+  const [state, send] = useMachine(taskQueueMachine);
   const tasks = Object.values(state.context.tasks);
 
   return (
@@ -49,12 +49,12 @@ export default function Home() {
       <main className="relative">
         <Box py="10">
           <Container maxW="3xl">
-            <Heading as="h1">Task scheduler with XState</Heading>
+            <Heading as="h1">Task queue with XState</Heading>
 
             <Box borderWidth={1} p="4" mt="4">
               <Box>
                 <Text>
-                  Current state of the scheduler:{" "}
+                  Current state of the queue:{" "}
                   <Code>{String(state.value)}</Code>
                 </Text>
 
@@ -212,7 +212,7 @@ export default function Home() {
           rounded="md"
           shadow="lg"
         >
-          <a href="https://github.com/Devessier/xstate-task-scheduler">
+          <a href="https://github.com/Devessier/xstate-task-queue">
             <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
               <path
                 fillRule="evenodd"

@@ -27,13 +27,13 @@ async function taskAsPromise() {
   }
 }
 
-export const taskSchedulerMachine =
+export const taskQueueMachine =
   /** @xstate-layout N4IgpgJg5mDOIC5QBUCGsDWACWBjAFpAK4A2YATgMQCCEEWALutgwPZYCORY3A2gAwBdRKAAOrWAEsGk1gDsRIAB6IAjKoDMAOgDsAVgBMqgGyqAnABYLesxoMWANCACeiALQmdW-ldV6LZmaq-GYAHPwaAL6RTmiYOATEZFQAqqIQqAxgjMwA5LBYouSyxQzOAsJIIOJSMvKKKgj+Bt4GZsbtoRYGNppOrggexl4+Fn4BQSHhUTEgcdh4hBCkFFoAkhBklBWKNdKyClWNJsZaoQb8pqoWdsYa-v2IOl46ZnqqRhrG-HrGwzrRWLMBJLFbkLQABXIrFwcCkciglAg8jAWkkcgAbqwMKj5iCkqsoTC4eioAh0VjcJkDhUdlU9nVDqBjsNvHpXr1vsZwqFHggDAZTnpzhZQupLjoNEFQoC5sDFgTwUTYbB4YiKNDwaISJkAGascgAWy0eIVy2SkOhKrV5MxMOp8lpQl2En29SOalZPw5QS5PL59z0WjCoT0-H45mFBg0qmiszkrAgcEUpsS5ooLtqBwa7lZBh5Bh0EdCxgsIQ0fLcPS0AS+OlL-klEbMBllqdBFo2ZEzbqZync5i0+f45yLqhLZdsej5YRrZklFju-B0JY6Zjb8rTYMtxNVpJ7jJzCAC-C090L45sPxj1z5xha4fzGlCGjGxnZOljcaAA */
   createMachine(
     {
-      id: "Task scheduler",
+      id: "Task queue",
 
-      tsTypes: {} as import("./taskScheduler.typegen").Typegen0,
+      tsTypes: {} as import("./taskQueue.typegen").Typegen0,
 
       context: {
         index: 0,

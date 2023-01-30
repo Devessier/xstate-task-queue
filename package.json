@@ -1,5 +1,5 @@
 {
-  "name": "xstate-task-scheduler",
+  "name": "xstate-task-queue",
   "version": "0.1.0",
   "private": true,
   "scripts": {
