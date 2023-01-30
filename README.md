@@ -35,3 +35,25 @@ If the execution failed, we mark the task as failed, and go back to `Idle` state
 When going back to `Idle` state, we transition immediately to `Processing` state if another task can be executed.
 
 The priority of tasks can be updated at anytime, provided that they are still in the queue, and are not currently processed, nor have already been executed. This will cause the queue to be reordered.
+
+Please not how is implemented `Process task` service:
+
+```ts
+services: {
+  "Process task": ({ tasks, currentTaskId }) => {
+    /** ... */
+
+    const { taskType } = tasks[currentTaskId];
+
+    if (taskType === "Promise") {
+      return taskAsPromise();
+    }
+
+    return taskMachine;
+  },
+},
+```
+
+XState can interpret promises and other machines as services. Once an invoked machine reaches a *final* state, its execution is stopped and the `onDone` transition is taken on the parent machine. That way, we may know when the child machine has finished processing the task.
+
+This example is oversimplified, but [child machine may return data to its parent](https://stately.ai/docs/xstate/actors/machines#ondone-in-child-machines).
